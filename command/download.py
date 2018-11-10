@@ -14,18 +14,22 @@ from config import global_config
 def download_command(filename, savedir, link, cookies, limit=None, output_dir=None):
     reload(sys)
     sys.setdefaultencoding("utf-8")
-    bool(output_dir) and not os.path.exists(output_dir) and os.makedirs(output_dir)
+    bool(output_dir) and not os.path.exists(
+        output_dir) and os.makedirs(output_dir)
     print("\033[32m" + filename + "\033[0m")
     pan_ua = 'netdisk;5.2.6;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia'
     cmd = 'aria2c -c -d "{savedir}" -o "{filename}" -s10 -x10' \
           ' --user-agent="{useragent}" --header "Referer:http://pan.baidu.com/disk/home"' \
           ' {cookies} {limit} {dir}' \
           ' "{link}"'.format(savedir=savedir, filename=filename, useragent=pan_ua, link=link,
-                             cookies=convert_none("--header \"Cookie: ", cookies),
-                             limit=convert_none('--max-download-limit=', limit),
+                             cookies=convert_none(
+                                 "--header \"Cookie: ", cookies),
+                             limit=convert_none(
+                                 '--max-download-limit=', limit),
                              dir=convert_none('--dir=', output_dir))
     print(cmd)
     subprocess.call(cmd, shell=True)
+
 
 def select_download(fis):
     if len(fis) <= 1:
@@ -35,10 +39,12 @@ def select_download(fis):
     counter = 1
     for fi in fis:
         savedir = fi.path.replace(fi.parent_path, '', 1)[1:]
-        print(str(counter) + ')', savedir + "/" + unicode(fi.filename).encode('utf8'))
+        print(str(counter) + ')', savedir + "/" +
+              unicode(fi.filename).encode('utf8'))
         counter += 1
 
-    input_numbers = raw_input("Please select files to download(e.g., 1,3-5,7):\n")
+    input_numbers = raw_input(
+        "Please select files to download(e.g., 1,3-5,7):\n")
     selected_numbers = []
     for part in input_numbers.split(','):
         x = part.split('-')
@@ -59,24 +65,32 @@ def select_download(fis):
     counter = 1
     for sfi in selected_fis:
         savedir = sfi.path.replace(sfi.parent_path, '', 1)[1:]
-        print(str(counter) + ')', savedir + "/" + unicode(sfi.filename).encode('utf8'))
+        print(str(counter) + ')', savedir + "/" +
+              unicode(sfi.filename).encode('utf8'))
         counter += 1
 
     return selected_fis
+
 
 def matchExtension(filename, extension):
     _, file_ext = os.path.splitext(filename)
     return file_ext.lower()[1:] == extension.lower()
 
+
 def download(args):
     limit = global_config.limit
     output_dir = global_config.dir
     parser = argparse.ArgumentParser(description="download command arg parser")
-    parser.add_argument('-L', '--limit', action="store", dest='limit', help="Max download speed limit.")
-    parser.add_argument('-D', '--dir', action="store", dest='output_dir', help="Download task to dir.")
-    parser.add_argument('-S', '--secret', action="store", dest='secret', help="Retrieval password.", default="")
-    parser.add_argument('-P', '--partial', action="count", help="Partial download.")
-    parser.add_argument('-E', '--extension', action="store", dest='extension', help="Download only specified by the extension. e.g. aw3")
+    parser.add_argument('-L', '--limit', action="store",
+                        dest='limit', help="Max download speed limit.")
+    parser.add_argument('-D', '--dir', action="store",
+                        dest='output_dir', help="Download task to dir.")
+    parser.add_argument('-S', '--secret', action="store",
+                        dest='secret', help="Retrieval password.", default="")
+    parser.add_argument('-P', '--partial', action="count",
+                        help="Partial download.")
+    parser.add_argument('-E', '--extension', action="store", dest='extension',
+                        help="Download only specified by the extension. e.g. aw3")
 
     if not args:
         parser.print_help()
@@ -118,7 +132,8 @@ def download(args):
                     cookies += '"'
 
                 savedir = fi.path.replace(fi.parent_path, '', 1)[1:]
-                download_command(fi.filename, savedir, fi.dlink, cookies=cookies, limit=limit, output_dir=output_dir)
+                download_command(fi.filename, savedir, fi.dlink,
+                                 cookies=cookies, limit=limit, output_dir=output_dir)
 
         elif res.get('type') == 4:
             pan = Pan()
@@ -132,9 +147,11 @@ def download(args):
                 cookies += '"'
             for info in infos:
                 if extension and not matchExtension(info.filename, extension):
-                    print('{filename} is ignored'.format(filename=info.filename))
+                    print('{filename} is ignored'.format(
+                        filename=info.filename))
                     continue
-                download_command(info.filename, info.dlink, cookies=cookies, limit=limit, output_dir=output_dir)
+                download_command(
+                    info.filename, info.dlink, cookies=cookies, limit=limit, output_dir=output_dir)
 
         # album
         elif res.get('type') == 2:
@@ -147,5 +164,3 @@ def download(args):
             continue
         else:
             continue
-
-    sys.exit(0)

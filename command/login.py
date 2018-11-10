@@ -5,6 +5,7 @@ from time import time
 import json
 import re
 import os
+import platform
 
 from requests import Session
 import requests.utils
@@ -40,7 +41,8 @@ class BaiduAccount(object):
         self._time = int(time())
         self._check_url = 'https://passport.baidu.com/v2/api/?logincheck&callback=bdPass.api.login._needCodestring' \
                           'CheckCallback&tpl=mn&charset=utf-8&index=0' \
-                          '&username={self.username}&time={self._time}'.format(self=self)
+                          '&username={self.username}&time={self._time}'.format(
+                              self=self)
         self._token_url = 'https://passport.baidu.com/v2/api/?getapi&class=login&tpl=mn&tangram=true'
         self._post_url = 'https://passport.baidu.com/v2/api/?login'
         self._genimage_url = 'https://passport.baidu.com/cgi-bin/genimage?{code}'
@@ -67,14 +69,36 @@ class BaiduAccount(object):
         if data.get('codestring'):
             self.codestring = data.get('codestring')
 
+    def _try_open_img(self, vcode):
+        _platform = platform.system().lower()
+        if _platform == 'darwin':
+            os.system('open ' + vcode)
+        elif _platform == 'windows':
+            os.system('start ' + vcode)
+        elif _platform == 'linux':
+            os.system('xdg-open %s > /dev/null 2>&1 &' % vcode)
+
+    def _save_img(self, img_url):
+        """Download vcode image and save it to path of source code."""
+        r = self.session.get(img_url)
+        data = r.content
+        img_path = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), VCODE)
+        with open(img_path, mode='wb') as fp:
+            fp.write(data)
+        print("Saved verification code to ",
+              os.path.dirname(os.path.abspath(__file__)))
+
     def _handle_verify_code(self):
         """Save verify code to filesystem and prompt user to input."""
         r = self.session.get(self._genimage_url.format(code=self.codestring))
         # TODO: Handle different verify code image format: jpg or gif
-        img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'vcode.png')
+        img_path = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))), 'vcode.png')
         with open(img_path, mode='wb') as fp:
             fp.write(r.content)
         print("Saved verification code to {}".format(os.path.dirname(img_path)))
+        self._try_open_img(img_path)
         vcode = raw_input("Please input the captcha:\n")
         return vcode
 
