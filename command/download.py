@@ -164,3 +164,5 @@ def download(args):
             continue
         else:
             continue
+
+    sys.exit(0)
